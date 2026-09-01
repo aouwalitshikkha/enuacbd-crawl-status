@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>enuacbd.com — Blog Crawl Status</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; background: #f6f7f9; color: #1a1a2e; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #667; font-size: 13px; margin-bottom: 16px; }
+  .cards { display: flex; gap: 12px; margin: 16px 0; }
+  .card { flex: 1; background: #fff; border: 1px solid #e3e5ea; border-radius: 10px; padding: 14px 16px; }
+  .card .num { font-size: 26px; font-weight: 700; }
+  .card .lbl { font-size: 12px; color: #667; text-transform: uppercase; letter-spacing: .05em; }
+  .card.ok .num { color: #1a7f37; }
+  .card.stale .num { color: #c47f00; }
+  .card.unknown .num { color: #c03030; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; background: #fff; border: 1px solid #e3e5ea; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; align-items: end; }
+  .filters label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #667; display: block; margin-bottom: 3px; }
+  .filters input, .filters select { border: 1px solid #ccd0d7; border-radius: 6px; padding: 6px 8px; font-size: 13px; background: #fff; }
+  .f-group { display: flex; flex-direction: column; }
+  #q { width: 220px; }
+  .btn-clear { background: #eef0f3; border: 1px solid #ccd0d7; border-radius: 6px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+  .btn-clear:hover { background: #e2e5ea; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e3e5ea; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #667; padding: 12px 14px; border-bottom: 2px solid #e3e5ea; background: #fafbfc; cursor: pointer; user-select: none; white-space: nowrap; }
+  th:hover { background: #f0f2f5; }
+  th .arrow { font-size: 10px; margin-left: 4px; color: #99a; }
+  td { padding: 10px 14px; border-bottom: 1px solid #eef0f3; font-size: 14px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .url-cell a { color: #0b57d0; text-decoration: none; font-weight: 600; font-size: 13px; }
+  .url-cell a:hover { text-decoration: underline; }
+  td .sub { margin: 2px 0 0; color: #889; font-size: 12px; }
+  .row-stale td { background: #fff8e6; }
+  .row-unknown td { background: #fdf0f0; }
+  .tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .tag-ok { background: #d7f0dd; color: #1a7f37; }
+  .tag-stale { background: #fde9c8; color: #c47f00; }
+  .tag-unknown { background: #f8d7d7; color: #c03030; }
+  .never { color: #c03030; font-weight: 600; }
+  .tz { color: #99a; font-size: 11px; }
+  .footer { margin-top: 20px; font-size: 12px; color: #99a; }
+  #count-line { font-size: 13px; color: #667; margin: 6px 0 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>enuacbd.com — Blog Crawl Status</h1>
+  <div class="sub">All published blogs · generated 2026-09-01 14:17 Dhaka · crawl data from Google Search Console URL Inspection API</div>
+  <div class="cards">
+    <div class="card ok"><div class="num" id="cOk">28</div><div class="lbl">Crawled after last edit</div></div>
+    <div class="card stale"><div class="num" id="cStale">1</div><div class="lbl">Stale (edit newer than crawl)</div></div>
+    <div class="card unknown"><div class="num" id="cUnk">2</div><div class="lbl">Never crawled / unknown</div></div>
+    <div class="card"><div class="num" id="cTot">31</div><div class="lbl">Total blogs</div></div>
+  </div>
+  <div class="filters">
+    <div class="f-group"><label>Search URL / title</label><input id="q" type="text" placeholder="e.g. honours, routine, result…" oninput="render()"></div>
+    <div class="f-group"><label>Status</label><select id="fStatus" onchange="render()">
+      <option value="all">All</option>
+      <option value="ok">OK</option>
+      <option value="stale">Stale</option>
+      <option value="unknown">Not crawled</option>
+    </select></div>
+    <div class="f-group"><label>Last modified from</label><input id="modFrom" type="date" onchange="render()"></div>
+    <div class="f-group"><label>Last modified to</label><input id="modTo" type="date" onchange="render()"></div>
+    <div class="f-group"><label>Last crawled from</label><input id="crawlFrom" type="date" onchange="render()"></div>
+    <div class="f-group"><label>Last crawled to</label><input id="crawlTo" type="date" onchange="render()"></div>
+    <button class="btn-clear" onclick="clearAll()">Clear</button>
+  </div>
+  <div id="count-line"></div>
+  <table>
+    <thead>
+      <tr>
+        <th onclick="sortBy('slug')">URL <span class="arrow" id="ar-slug"></span></th>
+        <th onclick="sortBy('mod_iso')">Last Modified <span class="arrow" id="ar-mod_iso"></span></th>
+        <th onclick="sortBy('crawl_iso')">Last Crawled by Google <span class="arrow" id="ar-crawl_iso"></span></th>
+        <th onclick="sortBy('status')">Status <span class="arrow" id="ar-status"></span></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="footer">Stale = Google's last crawl predates the blog's last edit time. Crawl times converted from UTC to Dhaka (+06:00).</div>
+</div>
+<script>
+const ROWS = [{"url": "https://enuacbd.com/honours/honours-4th-year-result/", "slug": "honours-4th-year-result", "title": "NU Honours 4th Year Result 2026", "mod": "2026-08-31 23:42", "mod_iso": "2026-08-31", "crawl": "2026-08-15 22:01", "crawl_iso": "2026-08-15", "status": "Submitted and indexed", "stale": true, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-4th-year-routine/", "slug": "honours-4th-year-routine", "title": "Honours 4th Year Exam Routine 2026 - NU Final Year Schedule", "mod": "2026-08-26 13:47", "mod_iso": "2026-08-26", "crawl": "2026-08-29 17:41", "crawl_iso": "2026-08-29", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-3rd-year-routine/", "slug": "honours-3rd-year-routine", "title": "Honours 3rd Year Routine 2026 of National University", "mod": "2026-08-26 13:33", "mod_iso": "2026-08-26", "crawl": "2026-08-29 20:11", "crawl_iso": "2026-08-29", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-1st-year-routine/", "slug": "honours-1st-year-routine", "title": "Honours 1st Year Exam Routine 2026 of National University", "mod": "2026-08-26 13:29", "mod_iso": "2026-08-26", "crawl": "2026-08-31 17:35", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-2nd-year-result/", "slug": "honours-2nd-year-result", "title": "NU Honours 2nd Year Result 2027", "mod": "2026-08-26 13:00", "mod_iso": "2026-08-26", "crawl": "2026-08-31 18:29", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-2nd-year-routine/", "slug": "honours-2nd-year-routine", "title": "Honours 2nd Year Exam Routine 2026 of National University", "mod": "2026-08-26 12:45", "mod_iso": "2026-08-26", "crawl": "2026-08-30 02:12", "crawl_iso": "2026-08-30", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-1st-year-form-fill-up/", "slug": "honours-1st-year-form-fill-up", "title": "NU Honours 1st Year Form Fill Up 2026  Notices", "mod": "2026-08-24 22:24", "mod_iso": "2026-08-24", "crawl": "2026-09-01 13:53", "crawl_iso": "2026-09-01", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/masters-final-year-exam-routine/", "slug": "masters-final-year-exam-routine", "title": "NU Masters Final Year Exam Routine 2026", "mod": "2026-08-23 20:56", "mod_iso": "2026-08-23", "crawl": "2026-08-31 17:42", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-first-year-routine/", "slug": "degree-first-year-routine", "title": "Degree 1st Year Exam Routine 2026 of NU: Full Schedule and Details", "mod": "2026-08-21 21:11", "mod_iso": "2026-08-21", "crawl": "2026-08-30 03:41", "crawl_iso": "2026-08-30", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-1st-year-form-fill-up-notice/", "slug": "degree-1st-year-form-fill-up-notice", "title": "Degree 1st Year Form Fill-up Notice and Details", "mod": "2026-08-20 20:47", "mod_iso": "2026-08-20", "crawl": "2026-08-28 16:50", "crawl_iso": "2026-08-28", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-1st-year-result/", "slug": "degree-1st-year-result", "title": "Degree 1st Year Result 2026 of National University", "mod": "2026-08-20 20:34", "mod_iso": "2026-08-20", "crawl": "2026-08-31 14:11", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/masters-professional-admission-circular/", "slug": "masters-professional-admission-circular", "title": "NU Masters Professional Admission Circular 2026", "mod": "2026-08-20 20:29", "mod_iso": "2026-08-20", "crawl": "2026-09-01 06:23", "crawl_iso": "2026-09-01", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-3rd-year-routine/", "slug": "degree-3rd-year-routine", "title": "Degree 3rd Year Exam Routine 2026 of NU", "mod": "2026-07-13 16:42", "mod_iso": "2026-07-13", "crawl": "2026-08-29 15:13", "crawl_iso": "2026-08-29", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-2nd-year-form-fill-up/", "slug": "honours-2nd-year-form-fill-up", "title": "Honours 2nd Year Form Fill-Up Notices 2026", "mod": "2026-07-13 15:43", "mod_iso": "2026-07-13", "crawl": "2026-08-26 14:47", "crawl_iso": "2026-08-26", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-2nd-year-routine/", "slug": "degree-2nd-year-routine", "title": "Degree 2nd Year Exam Routine 2026 of National University", "mod": "2026-07-13 14:04", "mod_iso": "2026-07-13", "crawl": "2026-08-30 10:33", "crawl_iso": "2026-08-30", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-2nd-year-result/", "slug": "degree-2nd-year-result", "title": "Degree 2nd Year Result 2026 of NU: Check Your Results Online", "mod": "2026-07-13 13:52", "mod_iso": "2026-07-13", "crawl": "2026-08-31 18:14", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/masters-regular-admission-circular/", "slug": "masters-regular-admission-circular", "title": "NU Masters Regular Admission Circular 2026", "mod": "2026-07-09 16:33", "mod_iso": "2026-07-09", "crawl": "2026-08-31 21:49", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-3rd-year-form-fill-up/", "slug": "degree-3rd-year-form-fill-up", "title": "NU Degree 3rd Year Form Fill up Notice 2026", "mod": "2026-05-17 22:12", "mod_iso": "2026-05-17", "crawl": "2026-08-30 10:00", "crawl_iso": "2026-08-30", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-3rd-year-result/", "slug": "honours-3rd-year-result", "title": "NU Honours 3rd Year Exam Result 2026", "mod": "2026-05-12 20:15", "mod_iso": "2026-05-12", "crawl": "2026-08-20 23:34", "crawl_iso": "2026-08-20", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-4th-year-form-fillup/", "slug": "honours-4th-year-form-fillup", "title": "Honours 4th Year Form Fill up Notice 2026", "mod": "2026-03-16 23:02", "mod_iso": "2026-03-16", "crawl": "2026-08-31 16:42", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/other notices/preliminary-to-masters-form-fill-up-notice/", "slug": "preliminary-to-masters-form-fill-up-notice", "title": "Preliminary to Master’s form Fill-up Notice 2026", "mod": "2026-03-03 15:24", "mod_iso": "2026-03-03", "crawl": "Never", "crawl_iso": "", "status": "URL is unknown to Google", "stale": false, "unknown": true}, {"url": "https://enuacbd.com/honours/honours-3rd-year-form-fill-up/", "slug": "honours-3rd-year-form-fill-up", "title": "Honours 3rd Year Form Fill-Up Notice 2026", "mod": "2026-03-01 14:36", "mod_iso": "2026-03-01", "crawl": "2026-08-31 20:58", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/masters-on-campus-admission/", "slug": "masters-on-campus-admission", "title": "Masters On Campus Admission 2026 Notices", "mod": "2026-03-01 01:16", "mod_iso": "2026-03-01", "crawl": "2026-07-25 02:22", "crawl_iso": "2026-07-25", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/honours/honours-1st-year-result/", "slug": "honours-1st-year-result", "title": "NU Honours 1st Year Result  2026", "mod": "2026-02-28 15:40", "mod_iso": "2026-02-28", "crawl": "2026-08-31 17:35", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/preliminary-to-masters-admission/", "slug": "preliminary-to-masters-admission", "title": "NU Preliminary to Masters Admission Circular 2026", "mod": "2026-02-27 12:03", "mod_iso": "2026-02-27", "crawl": "2026-08-31 18:43", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/masters-final-year-result/", "slug": "masters-final-year-result", "title": "Masters Final Year Result 2026 Of NU", "mod": "2026-02-26 15:19", "mod_iso": "2026-02-26", "crawl": "2026-08-31 17:48", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/masters-final-year-form-fill-up/", "slug": "masters-final-year-form-fill-up", "title": "NU Masters Final Year Form Fill-Up Notice 2026", "mod": "2026-02-23 15:33", "mod_iso": "2026-02-23", "crawl": "2026-08-25 23:06", "crawl_iso": "2026-08-25", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-2nd-year-form-fillup/", "slug": "degree-2nd-year-form-fillup", "title": "Degree 2nd Year Form Fill-Up Notice 2026", "mod": "2026-02-21 13:11", "mod_iso": "2026-02-21", "crawl": "2026-08-28 14:20", "crawl_iso": "2026-08-28", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/degree/degree-3rd-year-result/", "slug": "degree-3rd-year-result", "title": "NU Degree 3rd Year Result 2026", "mod": "2025-12-19 19:30", "mod_iso": "2025-12-19", "crawl": "2026-09-01 11:30", "crawl_iso": "2026-09-01", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/masters/preli-to-masters-routine/", "slug": "preli-to-masters-routine", "title": "Preli to Masters Exam Routine 2026 of National University", "mod": "2025-10-30 19:35", "mod_iso": "2025-10-30", "crawl": "2026-08-31 21:23", "crawl_iso": "2026-08-31", "status": "Submitted and indexed", "stale": false, "unknown": false}, {"url": "https://enuacbd.com/other notices/nu-ma-in-mass-communication-media/", "slug": "nu-ma-in-mass-communication-media", "title": "M.A. in Mass Communication & Media Routine of National University", "mod": "2025-10-29 19:43", "mod_iso": "2025-10-29", "crawl": "Never", "crawl_iso": "", "status": "URL is unknown to Google", "stale": false, "unknown": true}];
+let sortKey = 'mod_iso', sortDir = -1;
+function cls(r) { return r.unknown ? 'row-unknown' : (r.stale ? 'row-stale' : 'row-ok'); }
+function tag(r) {
+  if (r.unknown) return '<span class="tag tag-unknown">NOT CRAWLED</span>';
+  if (r.stale) return '<span class="tag tag-stale">STALE</span>';
+  return '<span class="tag tag-ok">OK</span>';
+}
+function render() {
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const st = document.getElementById('fStatus').value;
+  const modFrom = document.getElementById('modFrom').value;
+  const modTo = document.getElementById('modTo').value;
+  const crawlFrom = document.getElementById('crawlFrom').value;
+  const crawlTo = document.getElementById('crawlTo').value;
+  let items = ROWS.filter(r => {
+    if (st !== 'all' && !(st === 'ok' ? (!r.stale && !r.unknown) : (st === 'stale' ? r.stale : r.unknown))) return false;
+    if (q && !(r.slug + ' ' + r.title + ' ' + r.url).toLowerCase().includes(q)) return false;
+    if (modFrom && r.mod_iso && r.mod_iso < modFrom) return false;
+    if (modTo && r.mod_iso && r.mod_iso > modTo) return false;
+    if (crawlFrom && r.crawl_iso && r.crawl_iso < crawlFrom) return false;
+    if (crawlTo && r.crawl_iso && r.crawl_iso > crawlTo) return false;
+    return true;
+  });
+  items.sort((a, b) => {
+    let va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
+    if (sortKey === 'crawl_iso') {
+      if (!a.crawl_iso && !b.crawl_iso) return 0;
+      if (!a.crawl_iso) return sortDir === 1 ? 1 : -1;
+      if (!b.crawl_iso) return sortDir === 1 ? -1 : 1;
+    }
+    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+  });
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = items.map(r => `<tr class="${cls(r)}">
+    <td class="url-cell"><a href="${r.url}" target="_blank">${r.slug}</a><div class="sub">${r.title}</div></td>
+    <td>${r.mod} <span class="tz">Dhaka</span></td>
+    <td>${r.unknown ? '<span class="never">Never</span>' : r.crawl + ' <span class="tz">Dhaka</span>'}</td>
+    <td class="tag-cell">${tag(r)}<div class="sub">${r.status}</div></td>
+  </tr>`).join('');
+  document.getElementById('cOk').textContent = items.filter(r => !r.stale && !r.unknown).length;
+  document.getElementById('cStale').textContent = items.filter(r => r.stale).length;
+  document.getElementById('cUnk').textContent = items.filter(r => r.unknown).length;
+  document.getElementById('cTot').textContent = items.length;
+  document.getElementById('count-line').textContent = `Showing ${items.length} of ${ROWS.length} blogs`;
+}
+function sortBy(k) {
+  if (sortKey === k) sortDir *= -1;
+  else { sortKey = k; sortDir = (k === 'slug' || k === 'status') ? 1 : -1; }
+  document.querySelectorAll('.arrow').forEach(a => a.textContent = '');
+  document.getElementById('ar-' + k).textContent = sortDir === 1 ? '▲' : '▼';
+  render();
+}
+function clearAll() {
+  ['q','fStatus','modFrom','modTo','crawlFrom','crawlTo'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = id === 'fStatus' ? 'all' : '';
+  });
+  render();
+}
+render();
+sortBy('mod_iso');
+</script>
+</body>
+</html>
